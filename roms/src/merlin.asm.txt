@@ -1,0 +1,169 @@
+0200: (1219) JP   0x0219
+0202: (204D) CALL 0x004D
+0204: (4552) SNE  V5,	82
+0206: (4C49) SNE  V12,	73
+0208: (4E20) SNE  V14,	32
+020A: (4279) SNE  V2,	121
+020C: (2044) CALL 0x0044
+020E: (6176) LD   V1,	118
+0210: (6964) LD   V9,	100
+0212: (2057) CALL 0x0057
+0214: (494E) SNE  V9,	78
+0216: (5445) SE   V4,	V4
+0218: (5222) SE   V2,	V2
+021A: (F9A3) Unknown opcode
+021C: (1D60) JP   0x0D60
+021E: (1061) JP   0x0061
+0220: (0022) Unknown opcode
+0222: (CBA3) RND  V11,	163
+0224: (3160) SE   V1,	96
+0226: (0B61) Unknown opcode
+0228: (1B22) JP   0x0B22
+022A: (CB64) RND  V11,	100
+022C: (0422) Unknown opcode
+022E: (DF65) DRW  V15,	V6,	5
+0230: (0062) Unknown opcode
+0232: (2822) CALL 0x0822
+0234: (C1C2) RND  V1,	194
+0236: (0380) Unknown opcode
+0238: (20A3) CALL 0x00A3
+023A: (59F5) SE   V9,	V15
+023C: (1EF0) JP   0x0EF0
+023E: (5560) SE   V5,	V6
+0240: (1761) JP   0x0761
+0242: (0863) Unknown opcode
+0244: (0183) Unknown opcode
+0246: (2233) CALL 0x0233
+0248: (0070) Unknown opcode
+024A: (0A63) Unknown opcode
+024C: (0283) Unknown opcode
+024E: (2233) CALL 0x0233
+0250: (0071) Unknown opcode
+0252: (0AA3) Unknown opcode
+0254: (17D0) JP   0x07D0
+0256: (1662) JP   0x0662
+0258: (1422) JP   0x0422
+025A: (C1D0) RND  V1,	208
+025C: (1662) JP   0x0662
+025E: (0522) Unknown opcode
+0260: (C175) RND  V1,	117
+0262: (0154) Unknown opcode
+0264: (5012) SE   V0,	V1
+0266: (3565) SE   V5,	101
+0268: (0060) Unknown opcode
+026A: (1761) JP   0x0761
+026C: (08A3) Unknown opcode
+026E: (17F3) JP   0x07F3
+0270: (0A33) Unknown opcode
+0272: (0412) Unknown opcode
+0274: (7963) ADD  V9,	99
+0276: (0012) Unknown opcode
+0278: (9733) SNE  V7, V3
+LD   I,	1843
+027A: (0512) Unknown opcode
+027C: (8370) LD   V3,	V7
+027E: (0A63) Unknown opcode
+0280: (0112) Unknown opcode
+0282: (9733) SNE  V7, V3
+LD   I,	1843
+0284: (0712) Unknown opcode
+0286: (8D71) OR   V13,	V7
+0288: (0A63) Unknown opcode
+028A: (0212) Unknown opcode
+028C: (9733) SNE  V7, V3
+LD   I,	1843
+028E: (0812) Unknown opcode
+0290: (6970) LD   V9,	112
+0292: (0A71) Unknown opcode
+0294: (0A63) Unknown opcode
+0296: (03D0) Unknown opcode
+0298: (1662) JP   0x0662
+029A: (1422) JP   0x0422
+029C: (C1D0) RND  V1,	208
+029E: (16A3) JP   0x06A3
+02A0: (59F5) SE   V9,	V15
+02A2: (1EF0) JP   0x0EF0
+02A4: (6575) LD   V5,	117
+02A6: (0150) Unknown opcode
+02A8: (3012) SE   V0,	18
+02AA: (B555) JP   V0	1365
+02AC: (4012) SNE  V0,	18
+02AE: (6922) LD   V9,	34
+02B0: (DF74) DRW  V15,	V7,	4
+02B2: (0112) Unknown opcode
+02B4: (2D22) CALL 0x0D22
+02B6: (F9A3) Unknown opcode
+02B8: (4560) SNE  V5,	96
+02BA: (1061) JP   0x0061
+02BC: (0E22) Unknown opcode
+02BE: (CB12) RND  V11,	18
+02C0: (BFF2) JP   V0	4082
+02C2: (15F2) JP   0x05F2
+02C4: (0732) Unknown opcode
+02C6: (0012) Unknown opcode
+02C8: (C300) RND  V3,	0
+02CA: (EE83) 02CC: (0062) Unknown opcode
+02CE: (05D0) Unknown opcode
+02D0: (15F2) JP   0x05F2
+02D2: (1E70) JP   0x0E70
+02D4: (0885) Unknown opcode
+02D6: (3075) SE   V0,	117
+02D8: (2050) CALL 0x0050
+02DA: (5012) SE   V0,	V1
+02DC: (CF00) RND  V15,	0
+02DE: (EEA3) 02E0: (5983) SE   V9,	V8
+02E2: (4073) SNE  V0,	115
+02E4: (FDF3) Unknown opcode
+02E6: (33F2) SE   V3,	242
+02E8: (65F1) LD   V5,	241
+02EA: (2960) CALL 0x0960
+02EC: (2B63) CALL 0x0B63
+02EE: (1BD0) JP   0x0BD0
+02F0: (3570) SE   V5,	112
+02F2: (05F2) Unknown opcode
+02F4: (29D0) CALL 0x09D0
+02F6: (3500) SE   V5,	0
+02F8: (EEA3) 02FA: (0F60) Unknown opcode
+02FC: (1761) JP   0x0761
+02FE: (07D0) Unknown opcode
+0300: (1870) JP   0x0870
+0302: (0AD0) Unknown opcode
+0304: (1871) JP   0x0871
+0306: (0AD0) Unknown opcode
+0308: (1870) JP   0x0870
+030A: (F6D0) Unknown opcode
+030C: (1800) JP   0x0800
+030E: (EEFF) 0310: (8181) OR   V1,	V8
+0312: (8181) OR   V1,	V8
+0314: (8181) OR   V1,	V8
+0316: (FF7E) Unknown opcode
+0318: (7E7E) ADD  V14,	126
+031A: (7E7E) ADD  V14,	126
+031C: (7EDB) ADD  V14,	219
+031E: (AA8B) LD   I,	2699
+0320: (CBCB) RND  V11,	203
+0322: (EF08) 0324: (8F0D) Unknown opcode
+0326: (ECA0) 0328: (A0B0) LD   I,	176
+032A: (30BE) SE   V0,	190
+032C: (5F51) SE   V15,	V5
+032E: (51D9) SE   V1,	V13
+0330: (D983) DRW  V9,	V8,	3
+0332: (8283) XOR  V2,	V8
+0334: (82FB) Unknown opcode
+0336: (E808) 0338: (8805) SUB  V8,	V0
+033A: (E2BE) 033C: (A0B8) LD   I,	184
+033E: (203E) CALL 0x003E
+0340: (8080) LD   V0,	V8
+0342: (8080) LD   V0,	V8
+0344: (F8F7) Unknown opcode
+0346: (85B7) SUBN V5,	V11
+0348: (95F5) SNE  V5, V15
+LD   I,	1525
+034A: (7654) ADD  V6,	84
+034C: (5654) SE   V6,	V5
+034E: (563A) SE   V6,	V3
+0350: (2A2A) CALL 0x0A2A
+0352: (2A39) CALL 0x0A39
+0354: (B6A5) JP   V0	1701
+0356: (B6A5) JP   V0	1701
+0358: (3500) SE   V5,	0

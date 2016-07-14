@@ -1,0 +1,791 @@
+<html>
+    <head>
+        <title>Chip-8 Technical Reference</title>
+        <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet">
+        <style>
+            body {
+                font-family: "Source Code Pro";
+                font-size: 12px;
+            }
+            .toc ol {
+                list-style-type: none;
+            }
+            section h1 {
+                border-bottom: 1px solid #333;
+            }
+            figure {
+                text-align: center;
+            }
+            figcaption {
+                color: #888;
+                font-size: 14px;
+            }
+            section table {
+                border-top: 1px solid #333;
+                border-left: 1px solid #333;
+                border-spacing: 0;
+                margin: 0 auto;
+                display: inline-block;
+            }
+            section table th,
+            section table td {
+                border-right: 1px solid #333;
+                border-bottom: 1px solid #333;
+                padding: 3px 5px;
+                vertical-align: top;
+                text-align: left;
+            }
+            td.expanded {
+                white-space: nowrap;
+            }
+            dt,
+            dd {
+                display: inline-block;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Chip-8 Technical Reference v1.0</h1>
+
+        <section class="toc" id="0.0">
+            <h1>0.0 - Table of Contents</h1>
+
+            <ol>
+                <li><a href="#0.0">0.0</a> - Table of Contents
+                    <ol>
+                        <li><a href="#0.1">0.1</a> - Using This Document</li>
+                    </ol>
+                </li>
+
+                <li><a href="#1.0">1.0</a> - About Chip-8</li>
+
+                <li><a href="#2.0">2.0</a> - Chip-8 Specifications
+                    <ol>
+                        <li><a href="#2.1">2.1</a> - Memory
+                            <ol>
+                                <li><a href="#memmap">Diagram</a> - Memory Map</li>
+                            </ol>
+                        </li>
+                        <li><a href="#2.2">2.2</a> - Registers</li>
+                        <li><a href="#2.3">2.3</a> - Keyboard
+                            <ol>
+                                <li><a href="#keyboard">Diagram</a> - Keyboard Layout</li>
+                            </ol>
+                        </li>
+                        <li><a href="#2.4">2.4</a> - Display
+                            <ol>
+                                <li><a href="#dispcoords">Diagram</a> - Display Coordinates</li>
+                                <li><a href="#font">Listing</a> - The Chip-8 Hexadecimal Font</li>
+                            </ol>
+                        </li>
+                        <li><a href="#2.5">2.5</a> - Timers &amp; Sound</li>
+                    </ol>
+                </li>
+
+                <li><a href="#3.0">3.0</a> - Chip-8 Instructions
+                    <ol>
+                        <li><a href="#3.1">3.1</a> - Standard Chip-8 Instructions
+                            <ol>
+                                <li><a href="#00E0">00E0</a> - CLS</li>
+                                <li><a href="#00EE">00EE</a> - RET</li>
+                                <li><a href="#0nnn">0<em>nnn</em></a> - SYS <em>addr</em></li>
+                                <li><a href="#1nnn">1<em>nnn</em></a> - JP <em>addr</em></li>
+                                <li><a href="#2nnn">2<em>nnn</em></a> - CALL <em>addr</em></li>
+                                <li><a href="#3xkk">3<em>xkk</em></a> - SE V<em>x</em>, <em>byte</em></li>
+                                <li><a href="#4xkk">4<em>xkk</em></a> - SNE V<em>x</em>, <em>byte</em></li>
+                                <li><a href="#5xy0">5<em>xy</em>0</a> - SE V<em>x</em>, V<em>y</em></li>
+                                <li><a href="#6xkk">6<em>xkk</em></a> - LD V<em>x</em>, <em>byte</em></li>
+                                <li><a href="#7xkk">7<em>xkk</em></a> - ADD V<em>x</em>, <em>byte</em></li>
+                                <li><a href="#8xy0">8<em>xy</em>0</a> - LD V<em>x</em>, V<em>y</em></li>
+                                <li><a href="#8xy1">8<em>xy</em>1</a> - OR V<em>x</em>, V<em>y</em></li>
+                                <li><a href="#8xy2">8<em>xy</em>2</a> - AND V<em>x</em>, V<em>y</em></li>
+                                <li><a href="#8xy3">8<em>xy</em>3</a> - XOR V<em>x</em>, V<em>y</em></li>
+                                <li><a href="#8xy4">8<em>xy</em>4</a> - ADD V<em>x</em>, V<em>y</em></li>
+                                <li><a href="#8xy5">8<em>xy</em>5</a> - SUB V<em>x</em>, V<em>y</em></li>
+                                <li><a href="#8xy6">8<em>xy</em>6</a> - SHR V<em>x</em> {, V<em>y</em>}</li>
+                                <li><a href="#8xy7">8<em>xy</em>7</a> - SUBN V<em>x</em>, V<em>y</em></li>
+                                <li><a href="#8xyE">8<em>xy</em>E</a> - SHL V<em>x</em> {, V<em>y</em>}</li>
+                                <li><a href="#9xy0">9<em>xy</em>0</a> - SNE V<em>x</em>, V<em>y</em></li>
+                                <li><a href="#Annn">A<em>nnn</em></a> - LD I, <em>addr</em></li>
+                                <li><a href="#Bnnn">B<em>nnn</em></a> - JP V0, <em>addr</em></li>
+                                <li><a href="#Cxkk">C<em>xkk</em></a> - RND V<em>x</em>, <em>byte</em></li>
+                                <li><a href="#Dxyn">D<em>xyn</em></a> - DRW V<em>x</em>, V<em>y</em>, <em>nibble</em></li>
+                                <li><a href="#Ex9E">E<em>x</em>9E</a> - SKP V<em>x</em></li>
+                                <li><a href="#ExA1">E<em>x</em>A1</a> - SKNP V<em>x</em></li>
+                                <li><a href="#Fx07">F<em>x</em>07</a> - LD V<em>x</em>, DT</li>
+                                <li><a href="#Fx0A">F<em>x</em>0A</a> - LD V<em>x</em>, K</li>
+                                <li><a href="#Fx15">F<em>x</em>15</a> - LD DT, V<em>x</em></li>
+                                <li><a href="#Fx18">F<em>x</em>18</a> - LD ST, V<em>x</em></li>
+                                <li><a href="#Fx1E">F<em>x</em>1E</a> - ADD I, V<em>x</em></li>
+                                <li><a href="#Fx29">F<em>x</em>29</a> - LD F, V<em>x</em></li>
+                                <li><a href="#Fx33">F<em>x</em>33</a> - LD B, V<em>x</em></li>
+                                <li><a href="#Fx55">F<em>x</em>55</a> - LD [I], V<em>x</em></li>
+                                <li><a href="#Fx65">F<em>x</em>65</a> - LD V<em>x</em>, [I]</li>
+                            </ol>
+                        </li>
+                        <li><a href="#3.2">3.2</a> - Super Chip-48 Instructions
+                            <ol>
+                                <li><a href="#00Cn">00C<em>n</em></a> - SCD <em>nibble</em></li>
+                                <li><a href="#00FB">00FB</a> - SCR</li>
+                                <li><a href="#00FC">00FC</a> - SCL</li>
+                                <li><a href="#00FD">00FD</a> - EXIT</li>
+                                <li><a href="#00FE">00FE</a> - LOW</li>
+                                <li><a href="#00FF">00FF</a> - HIGH</li>
+                                <li><a href="#Dxy0">D<em>xy</em>0</a> - DRW V<em>x</em>, V<em>y</em>, 0</li>
+                                <li><a href="#Fx30">F<em>x</em>30</a> - LD HF, V<em>x</em></li>
+                                <li><a href="#Fx75">F<em>x</em>75</a> - LD R, V<em>x</em></li>
+                                <li><a href="#Fx85">F<em>x</em>85</a> - LD V<em>x</em>, R</li>
+                            </ol>
+                        </li>
+                    </ol>
+                </li>
+
+                <li><a href="#4.0">4.0</a> - Interpreters</li>
+                <li><a href="#5.0">5.0</a> - Credits</ii>
+            </ol>
+        </section>
+
+
+        <section id="0.1">
+            <h1>0.1 - Using This Document</h1>
+
+            <p>While creating this document, I took every effort to try to make it easy to read, as well as easy to find what you're looking for.</p>
+            <p>In most cases, where a hexadecimal value is given, it is followed by the equivalent decimal value in parenthesis. For example, "0x200 (512)."</p>
+            <p>In most cases, when a word or letter is italicized, it is referring to a variable value, for example, if I write "V<EM>x</EM>," the <EM>x</EM> refers to a 4-bit value.</p>
+        </section>
+
+        <section id="1.0">
+            <h1>1.0 - About Chip-8</h1>
+
+            <p>Whenever I mention to someone that I'm writing a Chip-8 interpreter, the response is always the same: "What's a Chip-8?"</p>
+            <p>Chip-8 is a simple, interpreted, programming language which was first used on some do-it-yourself computer systems in the late 1970s and early 1980s. The COSMAC VIP, DREAM 6800, and ETI 660 computers are a few examples. These computers typically were designed to use a television as a display, had between 1 and 4K of RAM, and used a 16-key hexadecimal keypad for input. The interpreter took up only 512 bytes of memory, and programs, which were entered into the computer in hexadecimal, were even smaller.</p>
+            <p>In the early 1990s, the Chip-8 language was revived by a man named Andreas Gustafsson. He created a Chip-8 interpreter for the HP48 graphing calculator, called Chip-48. The HP48 was lacking a way to easily make fast games at the time, and Chip-8 was the answer. Chip-48 later begat Super Chip-48, a modification of Chip-48 which allowed higher resolution graphics, as well as other graphical enhancements.</p>
+            <p>Chip-48 inspired a whole new crop of Chip-8 interpreters for various platforms, including MS-DOS, Windows 3.1, Amiga, HP48, MSX, Adam, and ColecoVision. I became involved with Chip-8 after stumbling upon Paul Robson's interpreter on the World Wide Web. Shortly after that, I began writing my own Chip-8 interpreter.</p>
+            <p>This document is a compilation of all the different sources of information I used while programming my interpreter.</p>
+        </section>
+
+        <section id="2.0">
+            <h1>2.0 - Chip-8 Specifications</h1>
+
+            <p>This section describes the Chip-8 memory, registers, display, keyboard, and timers.</p>
+        </section>
+
+        <section id="2.1">
+            <h1>2.1 - Memory</h1>
+
+            <p>The Chip-8 language is capable of accessing up to 4KB (4,096 bytes) of RAM, from location 0x000 (0) to 0xFFF (4095). The first 512 bytes, from 0x000 to 0x1FF, are where the original interpreter was located, and should not be used by programs.</p>
+            <p>Most Chip-8 programs start at location 0x200 (512), but some begin at 0x600 (1536). Programs beginning at 0x600 are intended for the ETI 660 computer.</p>
+
+            <h2 id="memmap">Memory Map:</h2>
+            <pre>+---------------+= 0xFFF (4095) End of Chip-8 RAM
+|               |
+|               |
+|               |
+|               |
+|               |
+| 0x200 to 0xFFF|
+|     Chip-8    |
+| Program / Data|
+|     Space     |
+|               |
+|               |
+|               |
++- - - - - - - -+= 0x600 (1536) Start of ETI 660 Chip-8 programs
+|               |
+|               |
+|               |
++---------------+= 0x200 (512) Start of most Chip-8 programs
+| 0x000 to 0x1FF|
+| Reserved for  |
+|  interpreter  |
++---------------+= 0x000 (0) Start of Chip-8 RAM
+</pre>
+        </section>
+
+        <section id="2.2">
+            <h1>2.2 - Registers</h1>
+
+            <p>Chip-8 has 16 general purpose 8-bit registers, usually referred to as V<em>x</em>, where <em>x</em> is a hexadecimal digit (0 through F). There is also a 16-bit register called I. This register is generally used to store memory addresses, so only the lowest (rightmost) 12 bits are usually used.</p>
+            <p>The VF register should not be used by any program, as it is used as a flag by some instructions. See section 3.0, <a href="#3.0">Instructions</a> for details.</p>
+            <p>Chip-8 also has two special purpose 8-bit registers, for the delay and sound timers. When these registers are non-zero, they are automatically decremented at a rate of 60Hz. See the section 2.5, <a href="#2.5">Timers &amp; Sound</a>, for more information on these.</p>
+            <p>There are also some "pseudo-registers" which are not accessable from Chip-8 programs. The program counter (PC) should be 16-bit, and is used to store the currently executing address. The stack pointer (SP) can be 8-bit, it is used to point to the topmost level of the stack.</p>
+            <p> The stack is an array of 16 16-bit values, used to store the address that the interpreter shoud return to when finished with a subroutine. Chip-8 allows for up to 16 levels of nested subroutines.</p>
+        </section>
+
+        <section id="2.3">
+            <h1>2.3 - Keyboard</h1>
+            <p>The computers which originally used the Chip-8 Language had a 16-key hexadecimal keypad with the following layout:</p>
+            <figure id="keyboard">
+                <table>
+                    <tr><td>1</td><td>2</td><td>3</td><td>C</td></tr>
+                    <tr><td>4</td><td>5</td><td>6</td><td>D</td></tr>
+                    <tr><td>7</td><td>8</td><td>9</td><td>E</td></tr>
+                    <tr><td>A</td><td>0</td><td>B</td><td>F</td></tr>
+                </table>
+                <figcaption>Figure 1: The Chip-8 keyboard layout</figcaption>
+            </figure>
+            <p>This layout must be mapped into various other configurations to fit the keyboards of today's platforms.</p>
+        </section>
+
+        <section id="2.4">
+            <h1>2.4 - Display</h1>
+
+            <p>The original implementation of the Chip-8 language used a 64x32-pixel monochrome display with this format:</p>
+
+            <figure id="dispcoords">
+                <table>
+                    <tr><td>(0,0)</td><td>(63,0)</td></tr>
+                    <tr><td>(0,31)</td><td>(63,31)</td></tr>
+                </table>
+                <figcaption>Figure 2: The Chip-8 display coordinates</figcaption>
+            </figure>
+
+            <p>Some other interpreters, most notably the one on the ETI 660, also had 64x48 and 64x64 modes. To my knowledge, no current interpreter supports these modes. More recently, Super Chip-48, an interpreter for the HP48 calculator, added a 128x64-pixel mode. This mode is now supported by most of the interpreters on other platforms.</p>
+            <p>Chip-8 draws graphics on screen through the use of sprites. A sprite is a group of bytes which are a binary representation of the desired picture. Chip-8  sprites may be up to 15 bytes, for a possible sprite size of 8x15.</p>
+            <p>Programs may also refer to a group of sprites representing the hexadecimal digits 0 through F. These sprites are 5 bytes long, or 8x5 pixels. The data should be stored in the interpreter area of Chip-8 memory (0x000 to 0x1FF). Below is a listing of each character's bytes, in binary and hexadecimal:</p>
+
+            <figure id="fontsprites">
+                <table>
+                    <tr><td>"0"</td><td>Binary</td><td>Hex</td></tr>
+                    <tr>
+                        <td>****<br>*&nbsp;&nbsp;*<br>*&nbsp;&nbsp;*<br>*&nbsp;&nbsp;*<br>****</td>
+                        <td>11110000<br>10010000<br>10010000<br>10010000<br>11110000</td>
+                        <td>0xF0<br>0x90<br>0x90<br>0x90<br>0xF0</td>
+                    </tr>
+                </table>
+
+                <table>
+                    <tr><td>"1"</td><td>Binary</td><td>Hex</td></tr>
+                    <tr>
+                        <td>&nbsp;&nbsp;*&nbsp;<br>&nbsp;**&nbsp;<br>&nbsp;&nbsp;*&nbsp;<br>&nbsp;&nbsp;*&nbsp;<br>&nbsp;***</td>
+                        <td>00100000<br>01100000<br>00100000<br>00100000<br>01110000</td>
+                        <td>0x20<br>0x60<br>0x20<br>0x20<br>0x70</td>
+                    </tr>
+                </table>
+
+                <table>
+                    <tr><td>"2"</td><td>Binary</td><td>Hex</td></tr>
+                    <tr>
+                        <td>****<br>&nbsp;&nbsp;&nbsp;*<br>****<br>*&nbsp;&nbsp;&nbsp;<br>****</td>
+                        <td>11110000<br>00010000<br>11110000<br>10000000<br>11110000</td>
+                        <td>0xF0<br>0x10<br>0xF0<br>0x80<br>0xF0</td>
+                    </tr>
+                </table>
+
+                <table>
+                    <tr><td>"3"</td><td>Binary</td><td>Hex</td></tr>
+                    <tr>
+                        <td>****<br>&nbsp;&nbsp;&nbsp;*<br>****<br>&nbsp;&nbsp;&nbsp;*<br>****</td>
+                        <td>11110000<br>00010000<br>11110000<br>00010000<br>11110000</td>
+                        <td>0xF0<br>0x10<br>0xF0<br>0x10<br>0xF0</td>
+                    </tr>
+                </table>
+
+                <table>
+                    <tr><td>"4"</td><td>Binary</td><td>Hex</td></tr>
+                    <tr>
+                        <td>*&nbsp;&nbsp;*<br>*&nbsp;&nbsp;*<br>****<br>&nbsp;&nbsp;&nbsp;*<br>&nbsp;&nbsp;&nbsp;*</td>
+                        <td>10010000<br>10010000<br>11110000<br>00010000<br>00010000</td>
+                        <td>0x90<br>0x90<br>0xF0<br>0x10<br>0x10</td>
+                    </tr>
+                </table>
+
+                <table>
+                    <tr><td>"5"</td><td>Binary</td><td>Hex</td></tr>
+                    <tr>
+                        <td>****<br>*&nbsp;&nbsp;&nbsp;<br>****<br>&nbsp;&nbsp;&nbsp;*<br>****</td>
+                        <td>11110000<br>10000000<br>11110000<br>00010000<br>11110000</td>
+                        <td>0xF0<br>0x80<br>0xF0<br>0x10<br>0xF0</td>
+                    </tr>
+                </table>
+
+
+
+                <table>
+                    <tr><td>"6"</td><td>Binary</td><td>Hex</td></tr>
+                    <tr>
+                        <td>****<br>*&nbsp;&nbsp;&nbsp;<br>****<br>*&nbsp;&nbsp;*<br>****</td>
+                        <td>11110000<br>10000000<br>11110000<br>10010000<br>11110000</td>
+                        <td>0xF0<br>0x80<br>0xF0<br>0x90<br>0xF0</td>
+                    </tr>
+                </table>
+
+
+                <table>
+                    <tr><td>"7"</td><td>Binary</td><td>Hex</td></tr>
+                    <tr>
+                        <td>****<br>&nbsp;&nbsp;&nbsp;*<br>&nbsp;&nbsp;*&nbsp;<br>&nbsp;*&nbsp;&nbsp;<br>&nbsp;*&nbsp;&nbsp;</td>
+                        <td>11110000<br>00010000<br>00100000<br>01000000<br>01000000</td>
+                        <td>0xF0<br>0x10<br>0x20<br>0x40<br>0x40</td>
+                    </tr>
+                </table>
+
+                <table>
+                    <tr><td>"8"</td><td>Binary</td><td>Hex</td></tr>
+                    <tr>
+                        <td>****<br>*&nbsp;&nbsp;*<br>****<br>*&nbsp;&nbsp;*<br>****</td>
+                        <td>11110000<br>10010000<br>11110000<br>10010000<br>11110000</td>
+                        <td>0xF0<br>0x90<br>0xF0<br>0x90<br>0xF0</td>
+                    </tr>
+                </table>
+
+                <table>
+                    <tr><td>"9"</td><td>Binary</td><td>Hex</td></tr>
+                    <tr>
+                        <td>****<br>*&nbsp;&nbsp;*<br>****<br>&nbsp;&nbsp;&nbsp;*<br>****</td>
+                        <td>11110000<br>10010000<br>11110000<br>00010000<br>11110000</td>
+                        <td>0xF0<br>0x90<br>0xF0<br>0x10<br>0xF0</td>
+                    </tr>
+                </table>
+
+
+                <table>
+                    <tr><td>"A"</td><td>Binary</td><td>Hex</td></tr>
+                    <tr>
+                        <td>****<br>*&nbsp;&nbsp;*<br>****<br>*&nbsp;&nbsp;*<br>*&nbsp;&nbsp;*</td>
+                        <td>11110000<br>10010000<br>11110000<br>10010000<br>10010000</td>
+                        <td>0xF0<br>0x90<br>0xF0<br>0x90<br>0x90</td>
+                    </tr>
+                </table>
+
+                <table>
+                    <tr><td>"B"</td><td>Binary</td><td>Hex</td></tr>
+                    <tr>
+                        <td>***&nbsp;<br>*&nbsp;&nbsp;*<br>***&nbsp;<br>*&nbsp;&nbsp;*<br>***&nbsp;</td>
+                        <td>11100000<br>10010000<br>11100000<br>10010000<br>11100000</td>
+                        <td>0xE0<br>0x90<br>0xE0<br>0x90<br>0xE0</td>
+                    </tr>
+                </table>
+
+                <table>
+                    <tr><td>"C"</td><td>Binary</td><td>Hex</td></tr>
+                    <tr>
+                        <td>****<br>*&nbsp;&nbsp;&nbsp;<br>*&nbsp;&nbsp;&nbsp;<br>*&nbsp;&nbsp;&nbsp;<br>****</td>
+                        <td>11110000<br>10000000<br>10000000<br>10000000<br>11110000</td>
+                        <td>0xF0<br>0x80<br>0x80<br>0x80<br>0xF0</td>
+                    </tr>
+                </table>
+
+                <table>
+                    <tr><td>"D"</td><td>Binary</td><td>Hex</td></tr>
+                    <tr>
+                        <td>***&nbsp;<br>*&nbsp;&nbsp;*<br>*&nbsp;&nbsp;*<br>*&nbsp;&nbsp;*<br>***&nbsp;</td>
+                        <td>11100000<br>10010000<br>10010000<br>10010000<br>11100000</td>
+                        <td>0xE0<br>0x90<br>0x90<br>0x90<br>0xE0</td>
+                    </tr>
+                </table>
+
+                <table>
+                    <tr><td>"E"</td><td>Binary</td><td>Hex</td></tr>
+                    <tr>
+                        <td>****<br>*&nbsp;&nbsp;&nbsp;<br>****<br>*&nbsp;&nbsp;&nbsp;<br>****</td>
+                        <td>11110000<br>10000000<br>11110000<br>10000000<br>11110000</td>
+                        <td>0xF0<br>0x80<br>0xF0<br>0x80<br>0xF0</td>
+                    </tr>
+                </table>
+
+                <table>
+                    <tr><td>"F"</td><td>Binary</td><td>Hex</td></tr>
+                    <tr>
+                        <td>****<br>*&nbsp;&nbsp;&nbsp;<br>****<br>*&nbsp;&nbsp;&nbsp;<br>*&nbsp;&nbsp;&nbsp;</td>
+                        <td>11110000<br>10000000<br>11110000<br>10000000<br>10000000</td>
+                        <td>0xF0<br>0x80<br>0xF0<br>0x80<br>0x80</td>
+                    </tr>
+                </table>
+                <figcaption>Figure 3: Chip-8 Sprite Layout</figcaption>
+            </figure>
+        </section>
+
+        <section id="2.5">
+            <h1>2.5 - Timers &amp; Sound</h1>
+            <p>Chip-8 provides 2 timers, a delay timer and a sound timer.</p>
+            <p>The delay timer is active whenever the delay timer register (DT) is non-zero. This timer does nothing more than subtract 1 from the value of DT at a rate of 60Hz. When DT reaches 0, it deactivates.</p>
+            <p>The sound timer is active whenever the sound timer register (ST) is non-zero. This timer also decrements at a rate of 60Hz, however, as long as ST's value is greater than zero, the Chip-8 buzzer will sound. When ST reaches zero, the soundtimer deactivates.</p>
+            <p>The sound produced by the Chip-8 interpreter has only one tone. The frequency of this tone is decided by the author of the interpreter.</p>
+        </section>
+
+        <section id="3.0">
+            <h1>3.0 - Chip-8 Instructions</h1>
+            <p>The original implementation of the Chip-8 language includes 36 different instructions, including math, graphics, and flow control functions.</p>
+            <p>Super Chip-48 added an additional    10 instructions, for a total of 46.</p>
+            <p>All instructions are 2 bytes long and are stored most-significant-byte first. In memory, the first byte of each instruction should be located at an even addresses. If a program includes sprite data, it should be padded so any instructions following it will be properly situated in RAM.</p>
+            <p>This document does not yet contain descriptions of the Super Chip-48 instructions. They are, however, listed below.</p>
+
+            <p>In these listings, the following variables are used:</p>
+            <ul>
+                <li>nnn or addr - A 12-bit value, the lowest 12 bits of the instruction</li>
+                <li>n or nibble - A 4-bit value, the lowest 4 bits of the instruction</li>
+                <li>x - A 4-bit value, the lower 4 bits of the high byte of the instruction</li>
+                <li>y - A 4-bit value, the upper 4 bits of the low byte of the instruction</li>
+                <li>kk or byte - An 8-bit value, the lowest 8 bits of the instruction</li>
+            </ul>
+
+
+            <section id="3.1">
+                <h1>3.1 - Standard Chip-8 Instructions</h1>
+
+                <table>
+                    <tr><th>Code</th><th>Expanded</th><th>Description</th></tr>
+                    <tr id="0nnn">
+                        <th>0nnn</th>
+                        <td class="expanded">SYS addr</td>
+                        <td>
+                            <p>Jump to a machine code routine at nnn.</p>
+                            <p>This instruction is only used on the old computers on which Chip-8 was originally implemented. It is ignored by modern interpreters.</p>
+                        </td>
+                    </tr>
+                    <tr id="00E0">
+                        <th>00E0</th>
+                        <td class="expanded">CLS</td>
+                        <td>
+                            <p>Clear the display.</p>
+                        </td>
+                    </tr>
+                    <tr id="00EE">
+                        <th>00EE</th>
+                        <td class="expanded">RET</td>
+                        <td>
+                            <p>Return from a subroutine.</p>
+                            <p>The interpreter sets the program counter to the address at the top of the stack, then subtracts 1 from the stack pointer.</p>
+                        </td>
+                    </tr>
+                    <tr id="1nnn">
+                        <th>1nnn</th>
+                        <td class="expanded">JP addr</td>
+                        <td>
+                            <p>Jump to location nnn.</p>
+                            <p>The interpreter sets the program counter to nnn.</p>
+                        </td>
+                    </tr>
+                    <tr id="2nnn">
+                        <th>2nnn</th>
+                        <td class="expanded">CALL addr</td>
+                        <td>
+                            <p>Call subroutine at nnn.</p>
+                            <p>The interpreter increments the stack pointer, then puts the current PC on the top of the stack. The PC is then set to nnn.</p>
+                        </td>
+                    </tr>
+                    <tr id="3xkk">
+                        <th>3xkk</th>
+                        <td class="expanded">SE Vx, byte</td>
+                        <td>
+                            <p>Skip next instruction if Vx = kk.</p>
+                            <p>The interpreter compares register Vx to kk, and if they are equal, increments the program counter by 2.</p>
+                        </td>
+                    </tr>
+                    <tr id="4xkk">
+                        <th>4xkk</th>
+                        <td class="expanded">SNE Vx, byte</td>
+                        <td>
+                            <p>Skip next instruction if Vx != kk.</p>
+                            <p>The interpreter compares register Vx to kk, and if they are not equal, increments the program counter by 2.</p>
+                        </td>
+                    </tr>
+                    <tr id="5xy0">
+                        <th>5xy0</th>
+                        <td class="expanded">SE Vx, Vy</td>
+                        <td>
+                            <p>Skip next instruction if Vx = Vy.</p>
+                            <p>The interpreter compares register Vx to register Vy, and if they are equal, increments the program counter by 2.</p>
+                        </td>
+                    </tr>
+                    <tr id="6xkk">
+                        <th>6xkk</th>
+                        <td class="expanded">LD Vx, byte</td>
+                        <td>
+                            <p>Set Vx = kk.</p>
+                            <p>The interpreter puts the value kk into register Vx.</p>
+                        </td>
+                    </tr>
+                    <tr id="7xkk">
+                        <th>7xkk</th>
+                        <td class="expanded">ADD Vx, byte</td>
+                        <td>
+                            <p>Set Vx = Vx + kk.</p>
+                            <p>Adds the value kk to the value of register Vx, then stores the result in Vx.</p>
+                        </td>
+                    </tr>
+                    <tr id="8xy0">
+                        <th>8xy0</th>
+                        <td class="expanded">LD Vx, Vy</td>
+                        <td>
+                            <p>Set Vx = Vy.</p>
+                            <p>Stores the value of register Vy in register Vx.</p>
+                        </td>
+                    </tr>
+                    <tr id="8xy1">
+                        <th>8xy1</th>
+                        <td class="expanded">OR Vx, Vy</td>
+                        <td>
+                            <p>Set Vx = Vx OR Vy.</p>
+                            <p>Performs a bitwise OR on the values of Vx and Vy, then stores the result in Vx. A bitwise OR compares the corrseponding bits from two values, and if either bit is 1, then the same bit in the result is also 1. Otherwise, it is 0.</p>
+                        </td>
+                    </tr>
+                    <tr id="8xy2">
+                        <th>8xy2</th>
+                        <td class="expanded">AND Vx, Vy</td>
+                        <td>
+                            <p>Set Vx = Vx AND Vy.</p>
+                            <p>Performs a bitwise AND on the values of Vx and Vy, then stores the result in Vx. A bitwise AND compares the corrseponding bits from two values, and if both bits are 1, then the same bit in the result is also 1. Otherwise, it is 0.</p>
+                        </td>
+                    </tr>
+                    <tr id="8xy3">
+                        <th>8xy3</th>
+                        <td class="expanded">XOR Vx, Vy</td>
+                        <td>
+                            <p>Set Vx = Vx XOR Vy.</p>
+                            <p>Performs a bitwise exclusive OR on the values of Vx and Vy, then stores the result in Vx. An exclusive OR compares the corrseponding bits from two values, and if the bits are not both the same, then the corresponding bit in the result is set to 1. Otherwise, it is 0.</p>
+                        </td>
+                    </tr>
+                    <tr id="8xy4">
+                        <th>8xy4</th>
+                        <td class="expanded">ADD Vx, Vy</td>
+                        <td>
+                            <p>Set Vx = Vx + Vy, set VF = carry.</p>
+                            <p>The values of Vx and Vy are added together. If the result is greater than 8 bits (i.e. greater than 255), VF is set to 1, otherwise 0. Only the lowest 8 bits of the result are kept, and stored in Vx.</p>
+                        </td>
+                    </tr>
+                    <tr id="8xy5">
+                        <th>8xy5</th>
+                        <td class="expanded">SUB Vx, Vy</td>
+                        <td>
+                            <p>Set Vx = Vx - Vy, set VF = NOT borrow.</p>
+                            <p>If Vx > Vy, then VF is set to 1, otherwise 0. Then Vy is subtracted from Vx, and the results stored in Vx.</p>
+                        </td>
+                    </tr>
+                    <tr id="8xy6">
+                        <th>8xy6</th>
+                        <td class="expanded">SHR Vx {, Vy}</td>
+                        <td>
+                            <p>Set Vx = Vx SHR 1.</p>
+                            <p>If the least-significant bit of Vx is 1, then VF is set to 1, otherwise 0. Then Vx is divided by 2.</p>
+                        </td>
+                    </tr>
+                    <tr id="8xy7">
+                        <th>8xy7</th>
+                        <td class="expanded">SUBN Vx, Vy</td>
+                        <td>
+                            <p>Set Vx = Vy - Vx, set VF = NOT borrow.</p>
+                            <p>If Vy > Vx, then VF is set to 1, otherwise 0. Then Vx is subtracted from Vy, and the results stored in Vx.</p>
+                        </td>
+                    </tr>
+                    <tr id="8xyE">
+                        <th>8xyE</th>
+                        <td class="expanded">SHL Vx {, Vy}</td>
+                        <td>
+                            <p>Set Vx = Vx SHL 1.</p>
+                            <p>If the most-significant bit of Vx is 1, then VF is set to 1, otherwise to 0. Then Vx is multiplied by 2.</p>
+                        </td>
+                    </tr>
+                    <tr id="9xy0">
+                        <th>9xy0</th>
+                        <td class="expanded">SNE Vx, Vy</td>
+                        <td>
+                            <p>Skip next instruction if Vx != Vy.</p>
+                            <p>The values of Vx and Vy are compared, and if they are not equal, the program counter is increased by 2.</p>
+                        </td>
+                    </tr>
+                    <tr id="Annn">
+                        <th>Annn</th>
+                        <td class="expanded">LD I, addr</td>
+                        <td>
+                            <p>Set I = nnn.</p>
+                            <p>The value of register I is set to nnn.</p>
+                        </td>
+                    </tr>
+                    <tr id="Bnnn">
+                        <th>Bnnn</th>
+                        <td class="expanded">JP V0, addr</td>
+                        <td>
+                            <p>Jump to location nnn + V0.</p>
+                            <p>The program counter is set to nnn plus the value of V0.</p>
+                        </td>
+                    </tr>
+                    <tr id="Cxkk">
+                        <th>Cxkk</th>
+                        <td class="expanded">RND Vx, byte</td>
+                        <td>
+                            <p>Set Vx = random byte AND kk.</p>
+                            <p>The interpreter generates a random number from 0 to 255, which is then ANDed with the value kk. The results are stored in Vx. See instruction <a href="#8xy2">8xy2</a> for more information on AND.</p>
+                        </td>
+                    </tr>
+                    <tr id="Dxyn">
+                        <th>Dxyn</th>
+                        <td class="expanded">DRW Vx, Vy, nibble</td>
+                        <td>
+                            <p>Display n-byte sprite starting at memory location I at (Vx, Vy), set VF = collision.</p>
+                            <p>The interpreter reads n bytes from memory, starting at the address stored in I. These bytes are then displayed as sprites on screen at coordinates (Vx, Vy). Sprites are XORed onto the existing screen. If this causes any pixels to be erased, VF is set to 1, otherwise it is set to 0. If the sprite is positioned so part of it is outside the coordinates of the display, it wraps around to the opposite side of the screen. See instruction <a href="#8xy3">8xy3</a> for more information on XOR, and section 2.4, <a href="#2.4">Display</a>, for more information on the Chip-8 screen and sprites.</p>
+                        </td>
+                    </tr>
+                    <tr id="Ex9E">
+                        <th>Ex9E</th>
+                        <td class="expanded">SKP Vx</td>
+                        <td>
+                            <p>Skip next instruction if key with the value of Vx is pressed.</p>
+                            <p>Checks the keyboard, and if the key corresponding to the value of Vx is currently in the down position, PC is increased by 2.</p>
+                        </td>
+                    </tr>
+                    <tr id="ExA1">
+                        <th>ExA1</th>
+                        <td class="expanded">SKNP Vx</td>
+                        <td>
+                            <p>Skip next instruction if key with the value of Vx is not pressed.</p>
+                            <p>Checks the keyboard, and if the key corresponding to the value of Vx is currently in the up position, PC is increased by 2.</p>
+                        </td>
+                    </tr>
+                    <tr id="Fx07">
+                        <th>Fx07</th>
+                        <td class="expanded">LD Vx, DT</td>
+                        <td>
+                            <p>Set Vx = delay timer value.</p>
+                            <p>The value of DT is placed into Vx.</p>
+                        </td>
+                    </tr>
+                    <tr id="Fx0A">
+                        <th>Fx0A</th>
+                        <td class="expanded">LD Vx, K</td>
+                        <td>
+                            <p>Wait for a key press, store the value of the key in Vx.</p>
+                            <p>All execution stops until a key is pressed, then the value of that key is stored in Vx.</p>
+                        </td>
+                    </tr>
+                    <tr id="Fx15">
+                        <th>Fx15</th>
+                        <td class="expanded">LD DT, Vx</td>
+                        <td>
+                            <p>Set delay timer = Vx.</p>
+                            <p>DT is set equal to the value of Vx.</p>
+                        </td>
+                    </tr>
+                    <tr id="Fx18">
+                        <th>Fx18</th>
+                        <td class="expanded">LD ST, Vx</td>
+                        <td>
+                            <p>Set sound timer = Vx.</p>
+                            <p>ST is set equal to the value of Vx.</p>
+                        </td>
+                    </tr>
+                    <tr id="Fx1E">
+                        <th>Fx1E</th>
+                        <td class="expanded">ADD I, Vx</td>
+                        <td>
+                            <p>Set I = I + Vx.</p>
+                            <p>The values of I and Vx are added, and the results are stored in I.</p>
+                        </td>
+                    </tr>
+                    <tr id="Fx29">
+                        <th>Fx29</th>
+                        <td class="expanded">LD F, Vx</td>
+                        <td>
+                            <p>Set I = location of sprite for digit Vx.</p>
+                            <p>The value of I is set to the location for the hexadecimal sprite corresponding to the value of Vx. See section 2.4, <a href="#2.4">Display</a>, for more information on the Chip-8 hexadecimal font.</p>
+                        </td>
+                    </tr>
+                    <tr id="Fx33">
+                        <th>Fx33</th>
+                        <td class="expanded">LD B, Vx</td>
+                        <td>
+                            <p>Store BCD representation of Vx in memory locations I, I+1, and I+2.</p>
+                            <p>The interpreter takes the decimal value of Vx, and places the hundreds digit in memory at location in I, the tens digit at location I+1, and the ones digit at location I+2.</p>
+                        </td>
+                    </tr>
+                    <tr id="Fx55">
+                        <th>Fx55</th>
+                        <td class="expanded">LD [I], Vx</td>
+                        <td>
+                            <p>Store registers V0 through Vx in memory starting at location I.</p>
+                            <p>The interpreter copies the values of registers V0 through Vx into memory, starting at the address in I.</p>
+                        </td>
+                    </tr>
+                    <tr id="Fx65">
+                        <th>Fx65</th>
+                        <td class="expanded">LD Vx, [I]</td>
+                        <td>
+                            <p>Read registers V0 through Vx from memory starting at location I.</p>
+                            <p>The interpreter reads values from memory starting at location I into registers V0 through Vx.</p>
+                        </td>
+                    </tr>
+                </table>
+            </section>
+
+            <section id="3.2">
+                <h1>3.2 - Super Chip-48 Instructions</h1>
+
+                <table>
+                    <tr><th>Code</th><th>Expanded</th><th>Description</th></tr>
+                    <tr id="00Cn">
+                        <th>00Cn</th>
+                        <td class="expanded">SCD nibble</td>
+                        <td></td>
+                    </tr>
+                    <tr id="00FB">
+                        <th>00FB</th>
+                        <td class="expanded">SCR</td>
+                        <td></td>
+                    </tr>
+                    <tr id="00FC">
+                        <th>00FC</th>
+                        <td class="expanded">SCL</td>
+                        <td></td>
+                    </tr>
+                    <tr id="00FD">
+                        <th>00FD</th>
+                        <td class="expanded">EXIT</td>
+                        <td></td>
+                    </tr>
+                    <tr id="00FE">
+                        <th>00FE</th>
+                        <td class="expanded">LOW</td>
+                        <td></td>
+                    </tr>
+                    <tr id="00FF">
+                        <th>00FF</th>
+                        <td class="expanded">HIGH</td>
+                        <td></td>
+                    </tr>
+                    <tr id="Dxy0">
+                        <th>Dxy0</th>
+                        <td class="expanded">DRW Vx, Vy, 0</td>
+                        <td></td>
+                    </tr>
+                    <tr id="Fx30">
+                        <th>Fx30</th>
+                        <td class="expanded">LD HF, Vx</td>
+                        <td></td>
+                    </tr>
+                    <tr id="Fx75">
+                        <th>Fx75</th>
+                        <td class="expanded">LD R, Vx</td>
+                        <td></td>
+                    </tr>
+                    <tr id="Fx85">
+                        <th>Fx85</th>
+                        <td class="expanded">LD Vx, R</td>
+                        <td></td>
+                    </tr>
+                </table>
+            </section>
+        </section>
+
+        <section id="4.0">
+            <h1>4.0 - Credits</h1>
+
+            <p>This document was compiled by <a href="mailto:cowgod@rockpile.com">Thomas P. Greene</a>.</p>
+
+            <p>Sources include:
+                <ul>
+                    <li>My own hacking.</li>
+                    <li>E-mail between David Winter and myself.</li>
+                    <li>David Winter's Chip-8 Emulator documentation.</li>
+                    <li>Christian Egeberg's Chipper documentation.</li>
+                    <li>Marcel de Kogel's Vision-8 source code.</li>
+                    <li>Paul Hayter's DREAM MON documentation.</li>
+                    <li>Paul Robson's web page.</li>
+                    <li>Andreas Gustafsson's Chip-48 documentation.</li>
+                </ul>
+            </p>
+
+            <p>July 3, 2016</p>
+        </section>
+    </body>
+</HTML>
