@@ -97,7 +97,7 @@ bool streq(const char* a, const char* b) {
 }
 
 int main(int argc, const char* argv[]) {
-    const char* filename = "roms/Maze.ch8";
+    const char* filename = "roms/bin/Maze.ch8";
 
     uint16_t breakpoint;
 
@@ -169,7 +169,6 @@ int main(int argc, const char* argv[]) {
         SDL_RWops* rom = SDL_RWFromFile(filename, "rb");
         if (rom != NULL) {
             int64_t size = SDL_RWsize(rom);
-            printf("Size of ROM: %lld\n", size);
 
             if (size > MAX_ROM_SIZE) {
                 printf("ROM too big!\n");
@@ -179,7 +178,7 @@ int main(int argc, const char* argv[]) {
             uint8_t* data = memory + ROM_OFFSET;
 
             if (SDL_RWread(rom, data, size, 1) > 0) {
-                printf("Loaded ROM\n");
+                printf("Loaded %lld bytes of ROM data\n", size);
             } else {
                 printf("Couldn't read file\n");
             }
