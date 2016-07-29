@@ -9,45 +9,7 @@
 #define MAX_ROM_SZ    (MEM_SZ - ROM_LOC)
 #define INSTR_SZ      8
 #define MAX_INSTR_CNT (MAX_ROM_SZ / INSTR_SZ)
-
-typedef enum {
-    INSTR_CLS,             // 00E0
-    INSTR_RET,             // 00EE
-    INSTR_JP_LIT,          // 1nnn
-    INSTR_CALL_LIT,        // 2nnn
-    INSTR_SE_REG_LIT,      // 3xkk
-    INSTR_SNE_REG_LIT,     // 4xkk
-    INSTR_SE_REG_REG,      // 5xy0
-    INSTR_LD_REG_LIT,      // 6xkk
-    INSTR_ADD_REG_LIT,     // 7xkk
-    INSTR_LD_REG_REG,      // 8xy0
-    INSTR_OR_REG_REG,      // 8xy1
-    INSTR_AND_REG_REG,     // 8xy2
-    INSTR_XOR_REG_REG,     // 8xy3
-    INSTR_ADD_REG_REG,     // 8xy4
-    INSTR_SUB_REG_REG,     // 8xy5
-    INSTR_SHR_REG_REG,     // 8xy6
-    INSTR_SUBN_REG_REG,    // 8xy7
-    INSTR_SHL_REG_REG,     // 8xyE
-    INSTR_SNE_REG_REG,     // 9xy0
-    INSTR_LD_I_LIT,        // Annn
-    INSTR_JP_LIT_OFF,      // Bnnn
-    INSTR_RND_REG_LIT,     // Cxkk
-    INSTR_DRW_REG_REG_LIT, // Dxyn
-    INSTR_SKP_REG,         // Ex9E
-    INSTR_SKNP_REG,        // ExA1
-    INSTR_LD_REG_DT,       // Fx07
-    INSTR_LD_REG_K,        // Fx0A
-    INSTR_LD_DT_REG,       // Fx15
-    INSTR_LD_ST_REG,       // Fx18
-    INSTR_ADD_I_REG,       // Fx1E
-    INSTR_LD_F_REG,        // Fx29
-    INSTR_LD_B_REG,        // Fx33
-    INSTR_LD_MEMI_REG,     // Fx55
-    INSTR_LD_REG_MEMI,     // Fx65
-} InstructionType;
-
-#define IDENT_SIZE 65
+#define IDENT_SIZE    65
 
 typedef struct {
     char chars[IDENT_SIZE];
@@ -174,6 +136,44 @@ size_t getWord(const char* source, size_t start, char* tokbuf) {
     return end - start;
 }
 
+
+typedef struct {
+    uint16_t memory[MEM_SZ];
+    size_t   offset;
+} Rom;
+
+void Rom_init(Rom* rom) {
+    rom->offset = 0;
+}
+
+void Rom_appendInstruction(Rom* rom, uint16_t instruction) {
+    printf("0x%04X (%ld): 0x%04X\n", (uint16_t)(rom->offset*sizeof(uint16_t)), rom->offset, instruction);
+    rom->memory[rom->offset] = instruction;
+    rom->offset++;
+}
+
+void Rom_dump(Rom* rom) {
+    printf("Instruction count: %ld\n", rom->offset);
+    for (int i = 0; i < rom->offset; i++) {
+        if (i % 16 == 0) printf("0x%04lX: ", i * sizeof(uint16_t));
+        printf("%04X ", rom->memory[i]);
+        if ((i+1) % 16 == 0) printf("\n");
+    }
+    printf("\n");
+}
+
+void Rom_prepare(Rom* rom) {
+    Rom_dump(rom);
+    for (int i = 0; i < rom->offset; i++) {
+        uint16_t num = rom->memory[i];
+        uint16_t high = (num & 0xFF00) >> 8;
+        uint16_t low  = (num & 0x00FF) << 8;
+        num = high | low;
+        rom->memory[i] = num;
+    }
+    Rom_dump(rom);
+}
+
 int main(int argc, const char* argv[]) {
     if (argc != 2) {
         printf("Missing argument: filename.\nUsage: assembler <filename>\n");
@@ -247,7 +247,7 @@ int main(int argc, const char* argv[]) {
             if (source[end] == ':') {
                 Label l;
                 Identifier_init(&l.name, tokbuf, IDENT_SIZE);
-                l.addr = instructionCount * 16;
+                l.addr = instructionCount * 2;
                 labels[labelCount] = l;
                 labelCount++;
 
@@ -289,6 +289,8 @@ int main(int argc, const char* argv[]) {
     }
 
     puts("===");
+    Rom rom;
+    Rom_init(&rom);
     for (int i = 0; i < instructionCount; ++i) {
         Instruction instr = program[i];
         Identifier  cmp;
@@ -299,14 +301,14 @@ int main(int argc, const char* argv[]) {
         cmp = Identifier_create("CLS");
         if (Identifier_isEqual(&instr.name, &cmp)) {
             op = 0x00E0;
-            printf("0x%04X\n", op);
+            Rom_appendInstruction(&rom, op);
             continue;
         }
 
         cmp = Identifier_create("RET");
         if (Identifier_isEqual(&instr.name, &cmp)) {
             op = 0x00EE;
-            printf("0x%04X\n", op);
+            Rom_appendInstruction(&rom, op);
             continue;
         }
 
@@ -317,11 +319,11 @@ int main(int argc, const char* argv[]) {
             if (t == IDENT_TYPE_LABEL) {
                 uint16_t addr = (getLabelAddress(&instr.ops[0], labels, labelCount) & 0xFFF);
                 op |= addr;
-                printf("0x%04X\n", op);
             } else {
-                printf("Nope! Jump needs a label\n");
-                break;
+                fprintf(stderr, "Nope! Jump needs a label\n");
+                exit(1);
             }
+            Rom_appendInstruction(&rom, op);
             continue;
         }
 
@@ -340,12 +342,12 @@ int main(int argc, const char* argv[]) {
                 op |= (getLabelAddress(&instr.ops[1], labels, labelCount) & 0xFFF);
             }
             else {
-                printf("nope. types:\n");
+                fprintf(stderr, "nope. types:\n");
                 printIdentifierType(t1);
                 printIdentifierType(t2);
-                break;
+                exit(1);
             }
-            printf("0x%04X\n", op);
+            Rom_appendInstruction(&rom, op);
             continue;
         }
 
@@ -360,11 +362,11 @@ int main(int argc, const char* argv[]) {
                 op |= (getLiteralValue(&instr.ops[1]) & 0xFF);
             }
             else {
-                printf("RND requires register and literal\n");
-                break;
+                fprintf(stderr, "RND requires register and literal\n");
+                exit(1);
             }
 
-            printf("0x%04X\n", op);
+            Rom_appendInstruction(&rom, op);
             continue;
         }
 
@@ -388,7 +390,7 @@ int main(int argc, const char* argv[]) {
                 exit(1);
             }
 
-            printf("0x%04X\n", op);
+            Rom_appendInstruction(&rom, op);
             continue;
         }
 
@@ -409,7 +411,7 @@ int main(int argc, const char* argv[]) {
                 exit(1);
             }
 
-            printf("0x%04X\n", op);
+            Rom_appendInstruction(&rom, op);
             continue;
         }
 
@@ -428,7 +430,7 @@ int main(int argc, const char* argv[]) {
                 exit(1);
             }
 
-            printf("0x%04X\n", op);
+            Rom_appendInstruction(&rom, op);
             continue;
         }
 
@@ -446,11 +448,23 @@ int main(int argc, const char* argv[]) {
                 exit(1);
             }
 
-            printf("0x%04X\n", op);
+            Rom_appendInstruction(&rom, op);
             continue;
         }
 
         printf("\n");
+    }
+
+    Rom_prepare(&rom);
+
+    SDL_RWops* rw = SDL_RWFromFile("out.ch8", "w");
+    if (rw != NULL) {
+        bool complete = (SDL_RWwrite(rw, rom.memory, sizeof(uint16_t), rom.offset) == rom.offset);
+        SDL_RWclose(rw);
+        if (!complete) {
+            fprintf(stderr, "Failed to write output: %s\n", SDL_GetError());
+            exit(1);
+        }
     }
 
     return 0;

@@ -188,7 +188,6 @@ int main(int argc, const char* argv[]) {
         }
     }
 
-
     bool running = true;
     bool infinite = false;
     bool waitingForInput = false;
