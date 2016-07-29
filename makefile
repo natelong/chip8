@@ -23,5 +23,9 @@ assembler: $(SRCDIR)/assembler.c
 	mkdir -p $(OUTDIR)
 	$(CC) -o $(OUTDIR)/assembler $(CCFLAGS) $(LIBS) $(SRCDIR)/assembler.c
 
+ansi: $(SRCDIR)/ansi.c
+	mkdir -p $(OUTDIR)
+	$(CC) -o $(OUTDIR)/ansi $(CCFLAGS) $(LIBS) -ltermbox $(SRCDIR)/ansi.c
+
 clean:
 	rm -rf bin
