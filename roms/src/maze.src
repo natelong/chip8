@@ -40,12 +40,10 @@ LOOP:
 FIN:
     JP  FIN         ; Infinite loop...
 RIGHT:              ; 4*4 bitmap of the left line
-    DATA 0b10000000
-    DATA 0b01000000
-    DATA 0b00100000
-    DATA 0b00010000
+    DATA 0x4080
+    DATA 0x1020
 LEFT:               ; 4*4 bitmap of the right line
-    DATA 0b00100000
-    DATA 0b01000000
-    DATA 0b10000000
-    DATA 0b00010000
+    BYTE 0b00100000
+    BYTE 0b01000000
+    BYTE 0b10000000
+    BYTE 0b00010000

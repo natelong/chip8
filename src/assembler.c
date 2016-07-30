@@ -66,6 +66,14 @@ bool isWordchar(char c) {
            (c >= 'a' && c <= 'z');
 }
 
+bool isSymbol(char c) {
+    return (c == ';' || c == ':' || c == ',');
+}
+
+bool isValidChar(char c) {
+    return isWhitespace(c) || isNewline(c) || isWordchar(c) || isSymbol(c);
+}
+
 bool isNumeric(Identifier* ident) {
     for (size_t i = 0; i < IDENT_SIZE; i++) {
         char c = ident->chars[i];
@@ -138,25 +146,40 @@ size_t getWord(const char* source, size_t start, char* tokbuf) {
 
 
 typedef struct {
-    uint16_t memory[MEM_SZ];
-    size_t   offset;
+    uint8_t memory[MEM_SZ];
+    size_t  offset;
 } Rom;
 
 void Rom_init(Rom* rom) {
     rom->offset = 0;
 }
 
+size_t Rom_getInstructionCount(Rom* rom) {
+    size_t count = rom->offset / sizeof(uint16_t);
+    if (rom->offset % sizeof(uint16_t) > 0) count++;
+    return count;
+}
+
 void Rom_appendInstruction(Rom* rom, uint16_t instruction) {
-    printf("0x%04X (%ld): 0x%04X\n", (uint16_t)(rom->offset*sizeof(uint16_t)), rom->offset, instruction);
-    rom->memory[rom->offset] = instruction;
-    rom->offset++;
+    printf("0x%04lX (%ld): 0x%04X\n", rom->offset, rom->offset, instruction);
+    uint16_t* loc = (uint16_t*)&rom->memory[rom->offset];
+    *loc = instruction;
+    rom->offset += 2;
+}
+
+void Rom_appendByte(Rom* rom, uint8_t byte) {
+    printf("0x%04lX (%ld): 0x%04X\n", rom->offset, rom->offset, byte);
+    rom->memory[rom->offset] = byte;
+    rom->offset += 1;
 }
 
 void Rom_dump(Rom* rom) {
     printf("Instruction count: %ld\n", rom->offset);
-    for (int i = 0; i < rom->offset; i++) {
+    size_t count = Rom_getInstructionCount(rom);
+    uint16_t* memory = (uint16_t*)rom->memory;
+    for (int i = 0; i < count; i++) {
         if (i % 16 == 0) printf("0x%04lX: ", i * sizeof(uint16_t));
-        printf("%04X ", rom->memory[i]);
+        printf("%04X ", memory[i]);
         if ((i+1) % 16 == 0) printf("\n");
     }
     printf("\n");
@@ -164,12 +187,15 @@ void Rom_dump(Rom* rom) {
 
 void Rom_prepare(Rom* rom) {
     Rom_dump(rom);
-    for (int i = 0; i < rom->offset; i++) {
-        uint16_t num = rom->memory[i];
+    size_t count = Rom_getInstructionCount(rom);
+    uint16_t* memory = (uint16_t*)rom->memory;
+
+    for (int i = 0; i < count; i++) {
+        uint16_t num = memory[i];
         uint16_t high = (num & 0xFF00) >> 8;
         uint16_t low  = (num & 0x00FF) << 8;
         num = high | low;
-        rom->memory[i] = num;
+        memory[i] = num;
     }
     Rom_dump(rom);
 }
@@ -188,6 +214,7 @@ int main(int argc, const char* argv[]) {
         SDL_RWops* sourceFile = SDL_RWFromFile(filename, "rb");
         if (sourceFile != NULL) {
             size = SDL_RWsize(sourceFile);
+            printf("Size of rom: %lld\n", size);
 
             char* sourceWritable = (char*)malloc(size);
 
@@ -212,8 +239,10 @@ int main(int argc, const char* argv[]) {
     size_t start = 0;
     char tokbuf[65];
     size_t instructionCount = 0;
+    size_t instructionOffset = 0;
     Instruction program[MAX_INSTR_CNT];
     Instruction* instr = NULL;
+    Identifier byteIdent = Identifier_create("BYTE");
 
     Label labels[128];
     int labelCount = 0;
@@ -230,7 +259,7 @@ int main(int argc, const char* argv[]) {
             continue;
         }
         else if (c == ';') {
-            while (source[start] != '\n') {
+            while (source[start] != '\n' && start < size) {
                 start++;
             }
             continue;
@@ -238,6 +267,10 @@ int main(int argc, const char* argv[]) {
         else if (c == ',') {
             start++;
             continue;
+        }
+        else if (!isValidChar(c)) {
+            fprintf(stderr, "Invalid character %c\n", c);
+            exit(1);
         }
         else {
             memset(tokbuf, '\0', IDENT_SIZE);
@@ -247,7 +280,7 @@ int main(int argc, const char* argv[]) {
             if (source[end] == ':') {
                 Label l;
                 Identifier_init(&l.name, tokbuf, IDENT_SIZE);
-                l.addr = instructionCount * 2;
+                l.addr = instructionOffset;
                 labels[labelCount] = l;
                 labelCount++;
 
@@ -258,6 +291,7 @@ int main(int argc, const char* argv[]) {
                 if (instr == NULL) {
                     instr = &program[instructionCount];
                     instructionCount++;
+                    instructionOffset += (Identifier_isEqual(&ident, &byteIdent) ? 1 : 2);
                     Instruction_init(instr, ident);
                 }
                 else {
@@ -434,6 +468,30 @@ int main(int argc, const char* argv[]) {
             continue;
         }
 
+        cmp = Identifier_create("BYTE");
+        if (Identifier_isEqual(&instr.name, &cmp)) {
+            Identifier data = instr.ops[0];
+            uint8_t byte = 0;
+
+            if (data.chars[0] == '0' && data.chars[1] == 'b') {
+                char* end;
+                long val = strtol(&data.chars[2], &end, 2);
+                byte = (val & 0xFF);
+            }
+            else if (data.chars[0] == '0' && data.chars[1] == 'x') {
+                char* end;
+                long val = strtol(&data.chars[2], &end, 16);
+                byte = (val & 0xFF);
+            }
+            else {
+                fprintf(stderr, "Only binary and hexadecimal literals currently supported for BYTE\n");
+                exit(1);
+            }
+
+            Rom_appendByte(&rom, byte);
+            continue;
+        }
+
         cmp = Identifier_create("DATA");
         if (Identifier_isEqual(&instr.name, &cmp)) {
             Identifier data = instr.ops[0];
@@ -443,8 +501,13 @@ int main(int argc, const char* argv[]) {
                 long val = strtol(&data.chars[2], &end, 2);
                 op = (val & 0xFFFF);
             }
+            else if (data.chars[0] == '0' && data.chars[1] == 'x') {
+                char* end;
+                long val = strtol(&data.chars[2], &end, 16);
+                op = (val & 0xFFFF);
+            }
             else {
-                fprintf(stderr, "Non-binary literals not currently supported for DATA\n");
+                fprintf(stderr, "Only binary and hexadecimal literals currently supported for DATA\n");
                 exit(1);
             }
 
@@ -459,7 +522,8 @@ int main(int argc, const char* argv[]) {
 
     SDL_RWops* rw = SDL_RWFromFile("out.ch8", "w");
     if (rw != NULL) {
-        bool complete = (SDL_RWwrite(rw, rom.memory, sizeof(uint16_t), rom.offset) == rom.offset);
+        size_t count  = Rom_getInstructionCount(&rom);
+        bool complete = (SDL_RWwrite(rw, rom.memory, sizeof(uint16_t), count) == count);
         SDL_RWclose(rw);
         if (!complete) {
             fprintf(stderr, "Failed to write output: %s\n", SDL_GetError());
